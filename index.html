@@ -283,6 +283,8 @@ function calcProjections(){
   }).filter(Boolean);
 }
 
+function hexToRgba(hex,a){const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return`rgba(${r},${g},${b},${a})`;}
+
 function buildProjChart(){
   if(charts.cProj){try{charts.cProj.destroy();}catch(e){}}
   const proj=calcProjections();
@@ -291,7 +293,7 @@ function buildProjChart(){
     const sub=document.getElementById('proj-chart-sub');
     if(sub) sub.textContent=`Referência: ${proj[0].refMes} · quantidade restante ÷ produção média (últimos 3 meses) · linha = % executado`;
   }
-  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle},grid:gridStyle},yM:{position:'left',ticks:{...tickStyle,callback:v=>v+'m'},grid:gridStyle,title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle,callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
+  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>hexToRgba(COLORS[p.atv]||'#94A3B8',0.45)),borderColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderWidth:1.5,borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle},grid:gridStyle},yM:{position:'left',ticks:{...tickStyle,callback:v=>v+'m'},grid:gridStyle,title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle,callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
 }
 
 function renderProjCards(){
