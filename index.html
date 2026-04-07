@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Produtividade — Obra</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#2563EB;--blue-light:#EFF6FF;--green:#059669;--green-light:#ECFDF5;
+  --amber:#D97706;--amber-light:#FFFBEB;--pink:#DB2777;--pink-light:#FDF2F8;
+  --purple:#7C3AED;--gray-50:#F8FAFC;--gray-100:#F1F5F9;--gray-200:#E2E8F0;
+  --gray-400:#94A3B8;--gray-600:#475569;--gray-800:#1E293B;--gray-900:#0F172A;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh}
+header{background:var(--gray-900);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:18px;height:18px;fill:white}
+.logo-text{font-size:15px;font-weight:600;color:white;letter-spacing:-0.01em}
+.logo-sub{font-size:12px;color:var(--gray-400);margin-top:1px}
+.header-right{display:flex;align-items:center;gap:12px}
+.badge-live{display:flex;align-items:center;gap:6px;background:rgba(5,150,105,0.15);color:#34D399;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px}
+.badge-live::before{content:'';width:6px;height:6px;background:#34D399;border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.header-date{font-size:12px;color:var(--gray-400)}
+main{max-width:1200px;margin:0 auto;padding:2rem}
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.filter-label{font-size:13px;color:var(--gray-600);font-weight:500;margin-right:4px}
+.filter-btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:6px 14px;border-radius:20px;border:1.5px solid var(--gray-200);background:white;color:var(--gray-600);cursor:pointer;transition:all 0.15s}
+.filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+.filter-btn.active{background:var(--blue);border-color:var(--blue);color:white}
+.metrics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:1.5rem}
+.metric-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;transition:box-shadow 0.2s}
+.metric-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.07)}
+.metric-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.metric-card.blue::before{background:var(--blue)}.metric-card.green::before{background:var(--green)}
+.metric-card.amber::before{background:var(--amber)}.metric-card.pink::before{background:var(--pink)}
+.metric-label{font-size:12px;color:var(--gray-400);font-weight:500;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:8px}
+.metric-value{font-size:26px;font-weight:600;color:var(--gray-900);letter-spacing:-0.02em;line-height:1}
+.metric-unit{font-size:13px;color:var(--gray-400);margin-top:4px}
+.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}
+.chart-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius);padding:20px;transition:box-shadow 0.2s}
+.chart-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.07)}
+.charts-row-2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.chart-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:600;color:var(--gray-800)}
+.chart-sub{font-size:12px;color:var(--gray-400);margin-top:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.leg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-600)}
+.leg-sq{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:12px}
+.proj-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;transition:box-shadow 0.2s}
+.proj-card:hover{box-shadow:0 4px 20px rgba(0,0,0,0.07)}
+.proj-card-header{padding:13px 16px 10px;border-bottom:1px solid var(--gray-100);display:flex;align-items:center;justify-content:space-between}
+.proj-atv{font-size:13px;font-weight:600;color:var(--gray-800)}
+.proj-conclusao{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace}
+.proj-c-done{background:var(--green-light);color:var(--green)}
+.proj-c-soon{background:var(--green-light);color:var(--green)}
+.proj-c-mid{background:var(--amber-light);color:var(--amber)}
+.proj-c-late{background:#FEF2F2;color:#DC2626}
+.proj-body{padding:13px 16px}
+.proj-prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--gray-400);margin-bottom:5px}
+.proj-prog-bg{height:7px;background:var(--gray-100);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.proj-prog-fill{height:100%;border-radius:4px}
+.proj-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-top:10px}
+.proj-stat{background:var(--gray-50);border-radius:6px;padding:7px 9px}
+.proj-stat-val{font-size:12px;font-weight:600;color:var(--gray-800);font-family:'DM Mono',monospace}
+.proj-stat-label{font-size:10px;color:var(--gray-400);margin-top:2px;text-transform:uppercase;letter-spacing:0.03em}
+.table-card{background:white;border:1px solid var(--gray-200);border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.table-header{padding:16px 20px;border-bottom:1px solid var(--gray-200)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--gray-50);padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--gray-200)}
+td{padding:11px 16px;border-bottom:1px solid var(--gray-100);color:var(--gray-700)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--gray-50)}
+.pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.pill-blue{background:var(--blue-light);color:var(--blue)}.pill-green{background:var(--green-light);color:var(--green)}
+.pill-amber{background:var(--amber-light);color:var(--amber)}.pill-pink{background:var(--pink-light);color:var(--pink)}
+.section-label{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;margin-top:1.5rem;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--gray-200)}
+footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-200);margin-top:1rem}
+@media(max-width:900px){.metrics-grid{grid-template-columns:repeat(2,1fr)}.charts-row,.charts-row-2{grid-template-columns:1fr}}
+@media(max-width:600px){main{padding:1rem}.metrics-grid{grid-template-columns:1fr 1fr}header{padding:0 1rem}}
+#loading-overlay{position:fixed;inset:0;background:rgba(248,250,252,0.92);z-index:200;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.spinner{width:36px;height:36px;border:3px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--gray-400);font-weight:500}
+.error-box{text-align:center;padding:24px;background:white;border:1px solid var(--gray-200);border-radius:var(--radius);max-width:420px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></div>
+    <div><div class="logo-text">Dashboard de Produtividade</div><div class="logo-sub">Acompanhamento de Obra</div></div>
+  </div>
+  <div class="header-right">
+    <span class="badge-live">Atualizado</span>
+    <span class="header-date" id="header-period">fev/25 → fev/26</span>
+  </div>
+</header>
+
+<main>
+  <div class="filter-bar">
+    <span class="filter-label">Atividade:</span>
+    <button class="filter-btn active" onclick="setFilter('Todas')">Todas</button>
+    <button class="filter-btn" onclick="setFilter('Ferro')">Ferro</button>
+    <button class="filter-btn" onclick="setFilter('Carpintaria')">Carpintaria</button>
+    <button class="filter-btn" onclick="setFilter('Alvenarias')">Alvenarias</button>
+    <button class="filter-btn" onclick="setFilter('Cobertura')">Cobertura</button>
+    <button class="filter-btn" onclick="setFilter('ETICS')">ETICS</button>
+    <button class="filter-btn" onclick="setFilter('Betonilhas')">Betonilhas</button>
+    <button class="filter-btn" onclick="setFilter('PAV terréo')">PAV terréo</button>
+  </div>
+
+  <div class="metrics-grid" id="metrics-row"></div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-header"><div>
+        <div class="chart-title" id="c1-title">Quantidade executada por mês</div>
+        <div class="chart-sub" id="c1-sub">Ferro (kg) e Carpintaria (m²) — eixos independentes</div>
+      </div></div>
+      <div class="legend" id="c1-legend">
+        <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro (kg)</span>
+        <span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria (m²)</span>
+      </div>
+      <div style="position:relative;width:100%;height:260px"><canvas id="c1"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div>
+        <div class="chart-title">Carga de mão de obra por atividade</div>
+        <div class="chart-sub">Média de trabalhadores/mês ao longo do tempo</div>
+      </div></div>
+      <div class="legend">
+        <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span>
+        <span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria</span>
+        <span class="leg"><span class="leg-sq" style="background:#D97706"></span>Alvenarias</span>
+        <span class="leg"><span class="leg-sq" style="background:#DB2777"></span>Cobertura</span>
+      </div>
+      <div style="position:relative;width:100%;height:240px"><canvas id="c5"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-row-2">
+    <div class="chart-card">
+      <div class="chart-header"><div>
+        <div class="chart-title" id="c2-title">Rendimento diário — Ferro</div>
+        <div class="chart-sub" id="c2-sub">kg por dia trabalhado</div>
+      </div></div>
+      <div style="position:relative;width:100%;height:200px"><canvas id="c2"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div>
+        <div class="chart-title" id="c3-title">Rendimento diário — Carpintaria</div>
+        <div class="chart-sub" id="c3-sub">m² por dia trabalhado</div>
+      </div></div>
+      <div style="position:relative;width:100%;height:200px"><canvas id="c3"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header"><div>
+        <div class="chart-title" id="c4-title">Equipa por atividade</div>
+        <div class="chart-sub" id="c4-sub">Média de trabalhadores/mês</div>
+      </div></div>
+      <div class="legend" id="c4-legend">
+        <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span>
+        <span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria</span>
+        <span class="leg"><span class="leg-sq" style="background:#D97706"></span>Alvenarias</span>
+      </div>
+      <div style="position:relative;width:100%;height:175px"><canvas id="c4"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-label">Projeção de conclusão por atividade</div>
+  <div class="chart-card" style="margin-bottom:12px">
+    <div class="chart-header"><div>
+      <div class="chart-title">Meses estimados para conclusão</div>
+      <div class="chart-sub" id="proj-chart-sub">Quantidade restante ÷ produção média mensal (últimos 3 meses) · linha = % executado</div>
+    </div></div>
+    <div class="legend">
+      <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Meses restantes</span>
+      <span class="leg"><span class="leg-sq" style="background:#0F172A"></span>% Executado</span>
+    </div>
+    <div style="position:relative;width:100%;height:240px"><canvas id="cProj"></canvas></div>
+  </div>
+  <div class="proj-grid" id="proj-grid"></div>
+
+  <div class="section-label" style="margin-top:2rem">Registo detalhado</div>
+  <div class="table-card">
+    <div class="table-header">
+      <div class="chart-title">Registo detalhado por mês e atividade</div>
+      <div class="chart-sub" style="margin-top:2px;font-size:12px;color:var(--gray-400)">Todos os dados do período</div>
+    </div>
+    <div style="overflow-x:auto">
+      <table><thead><tr>
+        <th>Mês</th><th>Atividade</th><th>Qtd. Executada</th><th>Und.</th>
+        <th>Média trab./mês</th><th>Dias úteis</th><th>Rend./mês</th><th>Rend./dia</th>
+      </tr></thead><tbody id="table-body"></tbody></table>
+    </div>
+  </div>
+
+</main>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">A carregar dados do Google Sheets…</div>
+</div>
+
+<footer>Dashboard de Produtividade de Obra &nbsp;·&nbsp; Dados via Google Sheets &nbsp;·&nbsp; <span id="footer-period"></span></footer>
+
+<script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  CONFIGURAÇÃO — substitui pelo ID do teu Sheets
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const SHEET_ID = 'COLOCA_AQUI_O_ID_DO_TEU_GOOGLE_SHEETS';
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  Dados (preenchidos via Google Sheets ao carregar)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+let BASE_DATA = [];
+let TOTAIS = {};
+let REF_MES = null; // definido na aba Config do Sheets; null = auto-detecção
+
+const COLORS={'Ferro':'#2563EB','Carpintaria':'#059669','Alvenarias':'#D97706','Cobertura':'#DB2777','ETICS':'#7C3AED','Betonilhas':'#64748B','PAV terréo':'#0891B2'};
+const PILL={'Ferro':'pill-blue','Carpintaria':'pill-green','Alvenarias':'pill-amber','Cobertura':'pill-pink','ETICS':'pill-blue','Betonilhas':'pill-amber','PAV terréo':'pill-green'};
+const UND={'Ferro':'kg','Carpintaria':'m²','Alvenarias':'m²','Betonilhas':'m²','Cobertura':'m²','ETICS':'m²','PAV terréo':'m²'};
+
+function allData(){return BASE_DATA;}
+
+let activeFilter='Todas';
+const fmt=n=>n.toLocaleString('pt-PT',{maximumFractionDigits:1});
+const tickStyle={font:{size:11,family:"'DM Sans',sans-serif"},color:'#94A3B8'};
+const gridStyle={color:'rgba(148,163,184,0.12)'};
+function getData(){const d=allData();return activeFilter==='Todas'?d:d.filter(x=>x.atv===activeFilter);}
+function getMeses(){return[...new Set(allData().map(d=>d.mes))];}
+function getByAtv(atv,field){return getMeses().map(m=>{const r=allData().find(d=>d.mes===m&&d.atv===atv);return r?r[field]:null;});}
+function getUnd(atv){return UND[atv]||'m²';}
+
+let charts={};
+function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
+
+function buildCharts(){
+  destroyCharts();
+  const meses=getMeses();
+  charts.c1=new Chart(document.getElementById('c1'),{type:'bar',data:{labels:meses,datasets:[{label:'Ferro (kg)',data:getByAtv('Ferro','qtd'),backgroundColor:'#2563EB',yAxisID:'yL',borderRadius:3},{label:'Carpintaria (m²)',data:getByAtv('Carpintaria','qtd'),backgroundColor:'#059669',yAxisID:'yR',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const lbl=activeFilter==='Todas'?ctx.dataset.label:`${activeFilter} (${getUnd(activeFilter)})`;return `${lbl}: ${fmt(ctx.parsed.y)}`;}}}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},yL:{position:'left',ticks:{...tickStyle,callback:v=>(v/1000).toFixed(0)+'k'},grid:gridStyle,title:{display:true,text:'Ferro (kg)',color:'#2563EB',font:{size:11}}},yR:{position:'right',ticks:{...tickStyle},grid:{drawOnChartArea:false},title:{display:true,text:'Carpintaria (m²)',color:'#059669',font:{size:11}}}}}});
+  charts.c2=new Chart(document.getElementById('c2'),{type:'line',data:{labels:meses,datasets:[{label:'kg/dia',data:getByAtv('Ferro','rendDia'),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#2563EB',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle,callback:v=>fmt(v)},grid:gridStyle}}}});
+  charts.c3=new Chart(document.getElementById('c3'),{type:'line',data:{labels:meses,datasets:[{label:'m²/dia',data:getByAtv('Carpintaria','rendDia'),borderColor:'#059669',backgroundColor:'rgba(5,150,105,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#059669',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
+  charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:[{label:'Ferro',data:getByAtv('Ferro','trab'),borderColor:'#2563EB',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Carpintaria',data:getByAtv('Carpintaria','trab'),borderColor:'#059669',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Alvenarias',data:getByAtv('Alvenarias','trab'),borderColor:'#D97706',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
+  const moAtvs=['Ferro','Carpintaria','Alvenarias','Cobertura','ETICS','Betonilhas','PAV terréo'];
+  charts.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:meses,datasets:moAtvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a],backgroundColor:'transparent',tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[a],borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
+  buildProjChart();
+}
+
+function calcProjections(){
+  const d=allData();
+  const mNames=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  // Determinar o mês mais recente de TODOS os dados
+  function mesParaNum(mes){const[mm,yy]=mes.split('/');return parseInt(yy)*12+mNames.indexOf(mm);}
+  const refMes=REF_MES||d.reduce((max,x)=>mesParaNum(x.mes)>mesParaNum(max)?x.mes:max,d[0].mes);
+  const[refMm,refYy]=refMes.split('/');
+  let refMi=mNames.indexOf(refMm),refYr=parseInt(refYy);
+  return Object.entries(TOTAIS).map(([atv,info])=>{
+    const sub=d.filter(x=>x.atv===atv);
+    if(!sub.length)return null;
+    const executado=sub.reduce((s,x)=>s+x.qtd,0);
+    const restante=Math.max(0,info.total-executado);
+    const pct=Math.round(executado/info.total*100*10)/10;
+    const ult3=sub.slice(-3);
+    const avgRend=ult3.reduce((s,x)=>s+x.rendMes,0)/ult3.length;
+    const avgTrab=ult3.reduce((s,x)=>s+x.trab,0)/ult3.length;
+    const prodMes=avgRend*avgTrab;
+    const meses=prodMes>0&&restante>0?Math.round(restante/prodMes*10)/10:0;
+    // Calcular data de conclusão a partir do mês de referência global
+    let mi=refMi,yr=refYr;
+    const mInt=Math.ceil(meses);
+    for(let i=0;i<mInt;i++){mi++;if(mi>11){mi=0;yr++;}}
+    const conclusao=meses===0?'Concluído':`${mNames[mi]}/${yr}`;
+    return{atv,und:info.und,total:info.total,executado:Math.round(executado*10)/10,restante:Math.round(restante*10)/10,pct,avgTrab:Math.round(avgTrab*10)/10,avgRend:Math.round(avgRend*10)/10,prodMes:Math.round(prodMes*10)/10,meses,conclusao,refMes};
+  }).filter(Boolean);
+}
+
+function buildProjChart(){
+  if(charts.cProj){try{charts.cProj.destroy();}catch(e){}}
+  const proj=calcProjections();
+  // Atualizar subtítulo com mês de referência
+  if(proj.length && proj[0].refMes){
+    const sub=document.getElementById('proj-chart-sub');
+    if(sub) sub.textContent=`Referência: ${proj[0].refMes} · quantidade restante ÷ produção média (últimos 3 meses) · linha = % executado`;
+  }
+  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle},grid:gridStyle},yM:{position:'left',ticks:{...tickStyle,callback:v=>v+'m'},grid:gridStyle,title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle,callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
+}
+
+function renderProjCards(){
+  const proj=calcProjections();
+  document.getElementById('proj-grid').innerHTML=proj.map(p=>{
+    const col=COLORS[p.atv]||'#94A3B8';
+    const cls=p.meses===0?'proj-c-done':p.meses<=3?'proj-c-soon':p.meses<=8?'proj-c-mid':'proj-c-late';
+    const label=p.meses===0?'Concluído':`${p.conclusao} (${p.meses}m)`;
+    const fillColor=p.pct>=90?'#059669':p.pct>=50?'#2563EB':p.pct>=20?'#D97706':'#DC2626';
+    return`<div class="proj-card"><div class="proj-card-header"><div style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex-shrink:0"></span><span class="proj-atv">${p.atv}</span></div><span class="proj-conclusao ${cls}">${label}</span></div><div class="proj-body"><div class="proj-prog-label"><span>Executado: ${fmt(p.executado)} ${p.und}</span><span style="font-weight:600;color:var(--gray-800)">${p.pct}%</span></div><div class="proj-prog-bg"><div class="proj-prog-fill" style="width:${Math.min(100,p.pct)}%;background:${fillColor}"></div></div><div class="proj-prog-label"><span>Restante: ${fmt(p.restante)} ${p.und}</span><span>Total: ${fmt(p.total)} ${p.und}</span></div><div class="proj-stats"><div class="proj-stat"><div class="proj-stat-val">${p.avgTrab}</div><div class="proj-stat-label">Média trab.</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.avgRend)}</div><div class="proj-stat-label">Rend./trab/mês</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.prodMes)}</div><div class="proj-stat-label">Prod./mês</div></div></div></div></div>`;
+  }).join('');
+}
+
+function renderMetrics(){
+  const d=getData(),isAll=activeFilter==='Todas';
+  const trabPorMes=getMeses().map(m=>({mes:m,total:allData().filter(x=>x.mes===m).reduce((s,x)=>s+x.trab,0)}));
+  const picoCarga=trabPorMes.reduce((max,x)=>x.total>max.total?x:max,{mes:'—',total:0});
+  const totalQtd=d.reduce((s,x)=>s+x.qtd,0);
+  const maxRend=d.length?Math.max(...d.map(x=>x.rendDia)):0;
+  const trabMeses=[...new Set(d.map(x=>x.mes))].map(m=>d.filter(x=>x.mes===m).reduce((s,x)=>s+x.trab,0));
+  const avgTrab=trabMeses.length?trabMeses.reduce((s,x)=>s+x,0)/trabMeses.length:0;
+  const totalMeses=[...new Set(d.map(x=>x.mes))].length;
+  const und=getUnd(activeFilter);
+  let cards;
+  if(isAll){cards=[{cls:'blue',label:'Pico de carga de mão de obra',value:picoCarga.total.toFixed(1),unit:'trabalhadores acumulados num mês'},{cls:'green',label:'Mês do pico de mão de obra',value:picoCarga.mes,unit:'maior concentração de equipa'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/mês (média geral)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
+  else{cards=[{cls:'blue',label:'Total executado',value:activeFilter==='Ferro'?(totalQtd/1000).toFixed(1)+'t':fmt(totalQtd)+' '+und,unit:activeFilter==='Ferro'?'kg acumulados':'m² acumulados'},{cls:'green',label:'Pico de rendimento',value:fmt(maxRend),unit:und+' por dia (máximo)'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/mês (média)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
+  document.getElementById('metrics-row').innerHTML=cards.map(m=>`<div class="metric-card ${m.cls}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-unit">${m.unit}</div></div>`).join('');
+}
+
+function renderTable(){
+  const d=getData();
+  document.getElementById('table-body').innerHTML=d.map(r=>`<tr><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--gray-400)">${r.mes}</td><td><span class="pill ${PILL[r.atv]||'pill-blue'}">${r.atv}</span></td><td style="font-weight:500">${fmt(r.qtd)}</td><td style="color:var(--gray-400)">${r.und}</td><td>${r.trab}</td><td>${r.dias}</td><td>${fmt(r.rendMes)}</td><td style="font-weight:600;color:var(--gray-800)">${fmt(r.rendDia)}</td></tr>`).join('');
+}
+
+function updatePeriod(){
+  const meses=getMeses();
+  const label=meses.length?`${meses[0]} → ${meses[meses.length-1]}`:'—';
+  document.getElementById('header-period').textContent=label;
+  document.getElementById('footer-period').textContent=`Dados: ${label}`;
+}
+
+function setFilter(f){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()===f));
+  renderMetrics();renderTable();updateChartTitles();updateCharts();
+}
+
+function updateChartTitles(){
+  const f=activeFilter,isAll=f==='Todas';
+  const und=isAll?'':getUnd(f),col=isAll?'#2563EB':(COLORS[f]||'#2563EB');
+  if(isAll){
+    document.getElementById('c1-title').textContent='Quantidade executada por mês';
+    document.getElementById('c1-sub').textContent='Ferro (kg) e Carpintaria (m²) — eixos independentes';
+    document.getElementById('c1-legend').innerHTML='<span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro (kg)</span><span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria (m²)</span>';
+    document.getElementById('c2-title').textContent='Rendimento diário — Ferro';
+    document.getElementById('c2-sub').textContent='kg por dia trabalhado';
+    document.getElementById('c3-title').textContent='Rendimento diário — Carpintaria';
+    document.getElementById('c3-sub').textContent='m² por dia trabalhado';
+    document.getElementById('c4-title').textContent='Equipa por atividade';
+    document.getElementById('c4-sub').textContent='Média de trabalhadores/mês';
+    document.getElementById('c4-legend').innerHTML='<span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span><span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria</span><span class="leg"><span class="leg-sq" style="background:#D97706"></span>Alvenarias</span>';
+  } else {
+    document.getElementById('c1-title').textContent=`Quantidade executada por mês — ${f}`;
+    document.getElementById('c1-sub').textContent=`Total de ${und} executados por mês`;
+    document.getElementById('c1-legend').innerHTML=`<span class="leg"><span class="leg-sq" style="background:${col}"></span>${f} (${und})</span>`;
+    document.getElementById('c2-title').textContent=`Rendimento diário — ${f}`;
+    document.getElementById('c2-sub').textContent=`${und} por dia trabalhado`;
+    document.getElementById('c3-title').textContent=`Rendimento/trabalhador/mês — ${f}`;
+    document.getElementById('c3-sub').textContent=`${und} por trabalhador por mês`;
+    document.getElementById('c4-title').textContent=`Equipa — ${f}`;
+    document.getElementById('c4-sub').textContent='Média de trabalhadores/mês';
+    document.getElementById('c4-legend').innerHTML=`<span class="leg"><span class="leg-sq" style="background:${col}"></span>${f}</span>`;
+  }
+}
+
+function updateCharts(){
+  const d=getData(),meses=getMeses(),isAll=activeFilter==='Todas';
+  const col=COLORS[activeFilter]||'#2563EB',und=getUnd(activeFilter);
+  if(isAll){
+    charts.c1.data.datasets[0].data=getByAtv('Ferro','qtd');charts.c1.data.datasets[0].backgroundColor='#2563EB';charts.c1.data.datasets[0].label='Ferro (kg)';
+    charts.c1.data.datasets[1].data=getByAtv('Carpintaria','qtd');
+    charts.c1.options.scales.yL.title.text='Ferro (kg)';charts.c1.options.scales.yL.title.color='#2563EB';charts.c1.options.scales.yR.display=true;
+    charts.c2.data.datasets[0].data=getByAtv('Ferro','rendDia');charts.c2.data.datasets[0].borderColor='#2563EB';charts.c2.data.datasets[0].pointBackgroundColor='#2563EB';
+    charts.c2.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} kg/dia`;
+    charts.c3.data.datasets[0].data=getByAtv('Carpintaria','rendDia');charts.c3.data.datasets[0].borderColor='#059669';charts.c3.data.datasets[0].pointBackgroundColor='#059669';
+    charts.c3.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} m²/dia`;
+    charts.c4.data.datasets[0].data=getByAtv('Ferro','trab');charts.c4.data.datasets[0].borderColor='#2563EB';charts.c4.data.datasets[0].label='Ferro';
+    charts.c4.data.datasets[1].data=getByAtv('Carpintaria','trab');charts.c4.data.datasets[1].label='Carpintaria';charts.c4.data.datasets[2].data=getByAtv('Alvenarias','trab');charts.c4.data.datasets[2].label='Alvenarias';charts.c4.options.plugins.tooltip={callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} trab.`}};
+  } else {
+    const filt=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.qtd:null;});
+    const filtR=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.rendDia:null;});
+    const filtRM=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.rendMes:null;});
+    const filtT=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.trab:null;});
+    charts.c1.data.datasets[0].data=filt;charts.c1.data.datasets[0].backgroundColor=col;charts.c1.data.datasets[0].label=`${activeFilter} (${und})`;charts.c1.data.datasets[1].data=[];
+    charts.c1.options.scales.yL.title.text=`${activeFilter} (${und})`;charts.c1.options.scales.yL.title.color=col;charts.c1.options.scales.yR.display=false;
+    charts.c2.data.datasets[0].data=filtR;charts.c2.data.datasets[0].borderColor=col;charts.c2.data.datasets[0].pointBackgroundColor=col;
+    charts.c2.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} ${und}/dia`;
+    charts.c3.data.datasets[0].data=filtRM;charts.c3.data.datasets[0].borderColor=col;charts.c3.data.datasets[0].pointBackgroundColor=col;
+    charts.c3.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} ${und}/trab/mês`;
+    charts.c4.data.datasets[0].data=filtT;charts.c4.data.datasets[0].borderColor=col;charts.c4.data.datasets[0].label=activeFilter;charts.c4.options.plugins.tooltip={callbacks:{label:ctx=>`${activeFilter}: ${ctx.parsed.y} trab.`}};charts.c4.data.datasets[1].data=[];charts.c4.data.datasets[2].data=[];
+  }
+  Object.values(charts).forEach(c=>c.update());
+  buildProjChart();renderProjCards();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function refreshAll(){
+  updatePeriod();renderMetrics();renderTable();
+  buildCharts();renderProjCards();updateChartTitles();
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  GOOGLE SHEETS — carregamento de dados
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const MNAMES=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// Normaliza o campo "mes" para o formato mar/26, independentemente
+// do que o Google Sheets devolver (string, Date(yyyy,m,d), objeto Date)
+function parseMes(val){
+  if(!val) return '';
+  // Já está no formato correto: mar/26
+  if(typeof val==='string'&&/^[a-zç]{3}\/\d{2}$/i.test(val.trim())) return val.trim().toLowerCase();
+  // Google Sheets gviz devolve datas como "Date(2026,2,1)" (mês 0-indexed)
+  if(typeof val==='string'){
+    const m=val.match(/^Date\((\d+),(\d+)/);
+    if(m) return `${MNAMES[parseInt(m[2])]}/${String(m[1]).slice(2)}`;
+  }
+  // Objeto Date nativo
+  if(val instanceof Date) return `${MNAMES[val.getMonth()]}/${String(val.getFullYear()).slice(2)}`;
+  return String(val).trim();
+}
+function parseGviz(text){
+  // O endpoint gviz/tq devolve JSONP: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+  // Extraímos apenas o JSON interior
+  const start=text.indexOf('{');
+  const end=text.lastIndexOf('}')+1;
+  return JSON.parse(text.slice(start,end));
+}
+
+function gvizToRows(data){
+  const cols=data.table.cols.map(c=>c.label);
+  return (data.table.rows||[]).map(row=>{
+    const obj={};
+    (row.c||[]).forEach((cell,i)=>{obj[cols[i]]=cell?cell.v:null;});
+    return obj;
+  });
+}
+
+async function loadSheets(){
+  const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+  const [rDados,rTotais,rConfig]=await Promise.all([
+    fetch(`${base}&sheet=Dados`),
+    fetch(`${base}&sheet=Totais`),
+    fetch(`${base}&sheet=Config`)
+  ]);
+  if(!rDados.ok||!rTotais.ok) throw new Error(`HTTP ${rDados.status}/${rTotais.status}`);
+
+  const dadosRows=gvizToRows(parseGviz(await rDados.text()));
+  const totaisRows=gvizToRows(parseGviz(await rTotais.text()));
+
+  // Aba Config — opcional; se não existir ou falhar, usa auto-detecção
+  try{
+    const configRows=gvizToRows(parseGviz(await rConfig.text()));
+    const refRow=configRows.find(r=>String(r.chave||'').trim().toLowerCase()==='referencia');
+    REF_MES=refRow?parseMes(refRow.valor):null;
+  }catch(_){REF_MES=null;}
+
+  BASE_DATA=dadosRows
+    .filter(r=>r.mes&&r.atv)
+    .map(r=>({
+      mes:parseMes(r.mes),
+      atv:String(r.atv).trim(),
+      und:String(r.und||'m²').trim(),
+      qtd:parseFloat(r.qtd)||0,
+      trab:parseFloat(r.trab)||0,
+      dias:parseInt(r.dias)||0,
+      rendMes:parseFloat(r.rendMes)||0,
+      rendDia:parseFloat(r.rendDia)||0,
+    }));
+
+  TOTAIS={};
+  totaisRows.filter(r=>r.atv).forEach(r=>{
+    TOTAIS[String(r.atv).trim()]={total:parseFloat(r.total)||0,und:String(r.und||'m²').trim()};
+  });
+}
+
+function showLoading(show){
+  document.getElementById('loading-overlay').style.display=show?'flex':'none';
+}
+
+function showError(msg){
+  document.getElementById('loading-overlay').innerHTML=`
+    <div class="error-box">
+      <div style="font-size:15px;font-weight:600;color:var(--gray-800);margin-bottom:8px">Erro ao carregar dados</div>
+      <div style="font-size:13px;color:var(--gray-600);margin-bottom:12px">
+        Verifica se o <code>SHEET_ID</code> está correto e se a folha está partilhada como <strong>Visualizador</strong> para qualquer pessoa com o link.
+      </div>
+      <code style="font-size:11px;color:var(--gray-400);display:block;background:var(--gray-50);padding:8px;border-radius:6px">${msg}</code>
+    </div>`;
+}
+
+async function init(){
+  showLoading(true);
+  try{
+    await loadSheets();
+    showLoading(false);
+    refreshAll();
+  }catch(e){
+    showError(e.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
