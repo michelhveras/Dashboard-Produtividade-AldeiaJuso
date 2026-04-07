@@ -90,6 +90,56 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-size:13px;color:var(--gray-400);font-weight:500}
 .error-box{text-align:center;padding:24px;background:white;border:1px solid var(--gray-200);border-radius:var(--radius);max-width:420px}
+
+/* ── Theme toggle ── */
+.theme-toggle{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);width:34px;height:34px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0}
+.theme-toggle:hover{background:rgba(255,255,255,0.14);color:white}
+
+/* ── Dark mode ── */
+[data-theme="dark"]{
+  --blue:#60A5FA;--blue-light:rgba(96,165,250,0.12);
+  --green:#34D399;--green-light:rgba(52,211,153,0.12);
+  --amber:#FBBF24;--amber-light:rgba(251,191,36,0.12);
+  --pink:#F472B6;--pink-light:rgba(244,114,182,0.12);
+  --gray-50:#111827;--gray-100:#1F2937;--gray-200:#374151;
+  --gray-400:#6B7280;--gray-600:#9CA3AF;--gray-800:#D1D5DB;--gray-900:#F9FAFB;
+}
+[data-theme="dark"] body{background:#0D1117;color:var(--gray-800)}
+[data-theme="dark"] header{background:#010409;border-bottom:1px solid #21262D}
+[data-theme="dark"] .metric-card,[data-theme="dark"] .chart-card,
+[data-theme="dark"] .proj-card,[data-theme="dark"] .table-card{background:#161B22;border-color:#30363D}
+[data-theme="dark"] .proj-stat{background:#1C2128}
+[data-theme="dark"] th{background:#1C2128;border-bottom-color:#30363D}
+[data-theme="dark"] td{border-bottom-color:#21262D;color:var(--gray-600)}
+[data-theme="dark"] tr:hover td{background:#1C2128}
+[data-theme="dark"] .filter-btn{background:#161B22;border-color:#30363D;color:var(--gray-600)}
+[data-theme="dark"] .filter-btn:hover{border-color:var(--blue);color:var(--blue)}
+[data-theme="dark"] .filter-btn.active{background:var(--blue);border-color:var(--blue);color:white}
+[data-theme="dark"] #loading-overlay{background:rgba(13,17,23,0.92)}
+[data-theme="dark"] .error-box{background:#161B22;border-color:#30363D}
+[data-theme="dark"] .proj-c-late{background:rgba(248,113,113,0.15);color:#F87171}
+[data-theme="dark"] .table-header{border-bottom-color:#30363D}
+[data-theme="dark"] footer{border-top-color:#21262D}
+[data-theme="dark"] .section-label::after{background:var(--gray-200)}
+[data-theme="dark"] .proj-prog-bg{background:#1C2128}
+
+/* ── Mobile: filter scroll horizontal ── */
+@media(max-width:600px){
+  .filter-bar{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none;gap:8px}
+  .filter-bar::-webkit-scrollbar{display:none}
+  .filter-btn{flex-shrink:0}
+}
+
+/* ── Mobile: tabela → cards ── */
+@media(max-width:700px){
+  .table-responsive thead{display:none}
+  .table-responsive tbody tr{display:block;margin-bottom:10px;border:1px solid var(--gray-200);border-radius:var(--radius-sm);overflow:hidden}
+  .table-responsive tbody td{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--gray-100);font-size:13px}
+  .table-responsive tbody td:last-child{border-bottom:none}
+  .table-responsive tbody td::before{content:attr(data-label);font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.04em;flex-shrink:0;margin-right:12px}
+  [data-theme="dark"] .table-responsive tbody tr{border-color:#30363D}
+  [data-theme="dark"] .table-responsive tbody td{border-bottom-color:#21262D}
+}
 </style>
 </head>
 <body>
@@ -101,6 +151,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
   <div class="header-right">
     <span class="badge-live">Atualizado</span>
     <span class="header-date" id="header-period">fev/25 → fev/26</span>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema claro/escuro"><svg id="theme-icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg><svg id="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
   </div>
 </header>
 
@@ -196,7 +247,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
       <div class="chart-sub" style="margin-top:2px;font-size:12px;color:var(--gray-400)">Todos os dados do período</div>
     </div>
     <div style="overflow-x:auto">
-      <table><thead><tr>
+      <table class="table-responsive"><thead><tr>
         <th>Mês</th><th>Atividade</th><th>Qtd. Executada</th><th>Und.</th>
         <th>Média trab./mês</th><th>Dias úteis</th><th>Rend./mês</th><th>Rend./dia</th>
       </tr></thead><tbody id="table-body"></tbody></table>
@@ -233,25 +284,27 @@ function allData(){return BASE_DATA;}
 
 let activeFilter='Todas';
 const fmt=n=>n.toLocaleString('pt-PT',{maximumFractionDigits:1});
-const tickStyle={font:{size:11,family:"'DM Sans',sans-serif"},color:'#94A3B8'};
-const gridStyle={color:'rgba(148,163,184,0.12)'};
+function isDark(){return document.documentElement.getAttribute('data-theme')==='dark';}
+const tickStyle=()=>({font:{size:11,family:"'DM Sans',sans-serif"},color:isDark()?'#4B5563':'#94A3B8'});
+const gridStyle=()=>({color:isDark()?'rgba(75,85,99,0.3)':'rgba(148,163,184,0.12)'});
 function getData(){const d=allData();return activeFilter==='Todas'?d:d.filter(x=>x.atv===activeFilter);}
 function getMeses(){return[...new Set(allData().map(d=>d.mes))];}
 function getByAtv(atv,field){return getMeses().map(m=>{const r=allData().find(d=>d.mes===m&&d.atv===atv);return r?r[field]:null;});}
 function getUnd(atv){return UND[atv]||'m²';}
 
+Chart.register({id:'emptyState',afterDraw(chart){const has=chart.data.datasets.some(ds=>ds.data&&ds.data.some(v=>v!==null&&v!==undefined&&!isNaN(Number(v))));if(!has){const{ctx,chartArea:{left,top,right,bottom}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=isDark()?'#4B5563':'#CBD5E1';ctx.font="500 13px 'DM Sans',sans-serif";ctx.fillText('Sem dados para o filtro selecionado',cx,cy);ctx.restore();}}});
 let charts={};
 function destroyCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch(e){}});charts={};}
 
 function buildCharts(){
   destroyCharts();
   const meses=getMeses();
-  charts.c1=new Chart(document.getElementById('c1'),{type:'bar',data:{labels:meses,datasets:[{label:'Ferro (kg)',data:getByAtv('Ferro','qtd'),backgroundColor:'#2563EB',yAxisID:'yL',borderRadius:3},{label:'Carpintaria (m²)',data:getByAtv('Carpintaria','qtd'),backgroundColor:'#059669',yAxisID:'yR',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const lbl=activeFilter==='Todas'?ctx.dataset.label:`${activeFilter} (${getUnd(activeFilter)})`;return `${lbl}: ${fmt(ctx.parsed.y)}`;}}}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},yL:{position:'left',ticks:{...tickStyle,callback:v=>(v/1000).toFixed(0)+'k'},grid:gridStyle,title:{display:true,text:'Ferro (kg)',color:'#2563EB',font:{size:11}}},yR:{position:'right',ticks:{...tickStyle},grid:{drawOnChartArea:false},title:{display:true,text:'Carpintaria (m²)',color:'#059669',font:{size:11}}}}}});
-  charts.c2=new Chart(document.getElementById('c2'),{type:'line',data:{labels:meses,datasets:[{label:'kg/dia',data:getByAtv('Ferro','rendDia'),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#2563EB',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle,callback:v=>fmt(v)},grid:gridStyle}}}});
-  charts.c3=new Chart(document.getElementById('c3'),{type:'line',data:{labels:meses,datasets:[{label:'m²/dia',data:getByAtv('Carpintaria','rendDia'),borderColor:'#059669',backgroundColor:'rgba(5,150,105,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#059669',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
-  charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:[{label:'Ferro',data:getByAtv('Ferro','trab'),borderColor:'#2563EB',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Carpintaria',data:getByAtv('Carpintaria','trab'),borderColor:'#059669',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Alvenarias',data:getByAtv('Alvenarias','trab'),borderColor:'#D97706',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
+  charts.c1=new Chart(document.getElementById('c1'),{type:'bar',data:{labels:meses,datasets:[{label:'Ferro (kg)',data:getByAtv('Ferro','qtd'),backgroundColor:'#2563EB',yAxisID:'yL',borderRadius:3},{label:'Carpintaria (m²)',data:getByAtv('Carpintaria','qtd'),backgroundColor:'#059669',yAxisID:'yR',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const lbl=activeFilter==='Todas'?ctx.dataset.label:`${activeFilter} (${getUnd(activeFilter)})`;return `${lbl}: ${fmt(ctx.parsed.y)}`;}}}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},yL:{position:'left',ticks:{...tickStyle(),callback:v=>(v/1000).toFixed(0)+'k'},grid:gridStyle(),title:{display:true,text:'Ferro (kg)',color:'#2563EB',font:{size:11}}},yR:{position:'right',ticks:{...tickStyle()},grid:{drawOnChartArea:false},title:{display:true,text:'Carpintaria (m²)',color:'#059669',font:{size:11}}}}}});
+  charts.c2=new Chart(document.getElementById('c2'),{type:'line',data:{labels:meses,datasets:[{label:'kg/dia',data:getByAtv('Ferro','rendDia'),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#2563EB',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle(),callback:v=>fmt(v)},grid:gridStyle()}}}});
+  charts.c3=new Chart(document.getElementById('c3'),{type:'line',data:{labels:meses,datasets:[{label:'m²/dia',data:getByAtv('Carpintaria','rendDia'),borderColor:'#059669',backgroundColor:'rgba(5,150,105,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#059669',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
+  charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:[{label:'Ferro',data:getByAtv('Ferro','trab'),borderColor:'#2563EB',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Carpintaria',data:getByAtv('Carpintaria','trab'),borderColor:'#059669',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Alvenarias',data:getByAtv('Alvenarias','trab'),borderColor:'#D97706',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
   const moAtvs=['Ferro','Carpintaria','Alvenarias','Cobertura','ETICS','Betonilhas','PAV terréo'];
-  charts.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:meses,datasets:moAtvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a],backgroundColor:'transparent',tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[a],borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle,maxRotation:45,autoSkip:false},grid:gridStyle},y:{ticks:{...tickStyle},grid:gridStyle}}}});
+  charts.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:meses,datasets:moAtvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a],backgroundColor:'transparent',tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[a],borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
   buildProjChart();
 }
 
@@ -293,7 +346,7 @@ function buildProjChart(){
     const sub=document.getElementById('proj-chart-sub');
     if(sub) sub.textContent=`Referência: ${proj[0].refMes} · quantidade restante ÷ produção média (últimos 3 meses) · linha = % executado`;
   }
-  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>hexToRgba(COLORS[p.atv]||'#94A3B8',0.45)),borderColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderWidth:1.5,borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle},grid:gridStyle},yM:{position:'left',ticks:{...tickStyle,callback:v=>v+'m'},grid:gridStyle,title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle,callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
+  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>hexToRgba(COLORS[p.atv]||'#94A3B8',0.45)),borderColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderWidth:1.5,borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle()},grid:gridStyle()},yM:{position:'left',ticks:{...tickStyle(),callback:v=>v+'m'},grid:gridStyle(),title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle(),callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
 }
 
 function renderProjCards(){
@@ -302,8 +355,9 @@ function renderProjCards(){
     const col=COLORS[p.atv]||'#94A3B8';
     const cls=p.meses===0?'proj-c-done':p.meses<=3?'proj-c-soon':p.meses<=8?'proj-c-mid':'proj-c-late';
     const label=p.meses===0?'Concluído':`${p.conclusao} (${p.meses}m)`;
+    const icon=p.meses===0?'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>':p.meses<=8?'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.5 8a6.5 6.5 0 1113 0A6.5 6.5 0 011.5 8zm7-.75v3.56l2.03.81a.75.75 0 11-.56 1.39l-2.5-1A.75.75 0 017 11.25v-4a.75.75 0 011.5 0z"/></svg>':'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575zm1.29 3.03a.75.75 0 011.5 0v3a.75.75 0 01-1.5 0zm.75 5.75a1 1 0 110 2 1 1 0 010-2z"/></svg>';
     const fillColor=p.pct>=90?'#059669':p.pct>=50?'#2563EB':p.pct>=20?'#D97706':'#DC2626';
-    return`<div class="proj-card"><div class="proj-card-header"><div style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex-shrink:0"></span><span class="proj-atv">${p.atv}</span></div><span class="proj-conclusao ${cls}">${label}</span></div><div class="proj-body"><div class="proj-prog-label"><span>Executado: ${fmt(p.executado)} ${p.und}</span><span style="font-weight:600;color:var(--gray-800)">${p.pct}%</span></div><div class="proj-prog-bg"><div class="proj-prog-fill" style="width:${Math.min(100,p.pct)}%;background:${fillColor}"></div></div><div class="proj-prog-label"><span>Restante: ${fmt(p.restante)} ${p.und}</span><span>Total: ${fmt(p.total)} ${p.und}</span></div><div class="proj-stats"><div class="proj-stat"><div class="proj-stat-val">${p.avgTrab}</div><div class="proj-stat-label">Média trab.</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.avgRend)}</div><div class="proj-stat-label">Rend./trab/mês</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.prodMes)}</div><div class="proj-stat-label">Prod./mês</div></div></div></div></div>`;
+    return`<div class="proj-card"><div class="proj-card-header"><div style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex-shrink:0"></span><span class="proj-atv">${p.atv}</span></div><span class="proj-conclusao ${cls}" style="display:flex;align-items:center;gap:4px">${icon}${label}</span></div><div class="proj-body"><div class="proj-prog-label"><span>Executado: ${fmt(p.executado)} ${p.und}</span><span style="font-weight:600;color:var(--gray-800)">${p.pct}%</span></div><div class="proj-prog-bg"><div class="proj-prog-fill" style="width:${Math.min(100,p.pct)}%;background:${fillColor}"></div></div><div class="proj-prog-label"><span>Restante: ${fmt(p.restante)} ${p.und}</span><span>Total: ${fmt(p.total)} ${p.und}</span></div><div class="proj-stats"><div class="proj-stat"><div class="proj-stat-val">${p.avgTrab}</div><div class="proj-stat-label">Média trab.</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.avgRend)}</div><div class="proj-stat-label">Rend./trab/mês</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.prodMes)}</div><div class="proj-stat-label">Prod./mês</div></div></div></div></div>`;
   }).join('');
 }
 
@@ -325,7 +379,7 @@ function renderMetrics(){
 
 function renderTable(){
   const d=getData();
-  document.getElementById('table-body').innerHTML=d.map(r=>`<tr><td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--gray-400)">${r.mes}</td><td><span class="pill ${PILL[r.atv]||'pill-blue'}">${r.atv}</span></td><td style="font-weight:500">${fmt(r.qtd)}</td><td style="color:var(--gray-400)">${r.und}</td><td>${r.trab}</td><td>${r.dias}</td><td>${fmt(r.rendMes)}</td><td style="font-weight:600;color:var(--gray-800)">${fmt(r.rendDia)}</td></tr>`).join('');
+  document.getElementById('table-body').innerHTML=d.map(r=>`<tr><td data-label="Mês" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--gray-400)">${r.mes}</td><td data-label="Atividade"><span class="pill ${PILL[r.atv]||'pill-blue'}">${r.atv}</span></td><td data-label="Qtd. Executada" style="font-weight:500">${fmt(r.qtd)}</td><td data-label="Und." style="color:var(--gray-400)">${r.und}</td><td data-label="Méd. trab./mês">${r.trab}</td><td data-label="Dias úteis">${r.dias}</td><td data-label="Rend./mês">${fmt(r.rendMes)}</td><td data-label="Rend./dia" style="font-weight:600;color:var(--gray-800)">${fmt(r.rendDia)}</td></tr>`).join('');
 }
 
 function updatePeriod(){
@@ -518,6 +572,22 @@ async function init(){
   }
 }
 
+function toggleTheme(){
+  const dark=isDark();
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  localStorage.setItem('theme',dark?'light':'dark');
+  const sun=document.getElementById('theme-icon-sun'),moon=document.getElementById('theme-icon-moon');
+  sun.style.display=dark?'block':'none';moon.style.display=dark?'none':'block';
+  if(BASE_DATA.length){destroyCharts();buildCharts();renderProjCards();}
+}
+(function(){
+  const t=localStorage.getItem('theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  if(t==='dark'){
+    document.documentElement.setAttribute('data-theme','dark');
+    const sun=document.getElementById('theme-icon-sun'),moon=document.getElementById('theme-icon-moon');
+    if(sun)sun.style.display='none';if(moon)moon.style.display='block';
+  }
+})();
 init();
 </script>
 </body>
