@@ -122,6 +122,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
 [data-theme="dark"] footer{border-top-color:#21262D}
 [data-theme="dark"] .section-label::after{background:var(--gray-200)}
 [data-theme="dark"] .proj-prog-bg{background:#1C2128}
+[data-theme="dark"] #proj-line-swatch{background:#F1F5F9 !important}
 
 /* ── Mobile: filter scroll horizontal ── */
 @media(max-width:600px){
@@ -234,7 +235,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
     </div></div>
     <div class="legend">
       <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Meses restantes</span>
-      <span class="leg"><span class="leg-sq" style="background:#0F172A"></span>% Executado</span>
+      <span class="leg"><span class="leg-sq" id="proj-line-swatch" style="background:#0F172A"></span>% Executado</span>
     </div>
     <div style="position:relative;width:100%;height:240px"><canvas id="cProj"></canvas></div>
   </div>
@@ -349,7 +350,7 @@ function buildProjChart(){
     const sub=document.getElementById('proj-chart-sub');
     if(sub) sub.textContent=`Referência: ${proj[0].refMes} · quantidade restante ÷ produção média (últimos 3 meses) · linha = % executado`;
   }
-  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>hexToRgba(COLORS[p.atv]||'#94A3B8',0.45)),borderColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderWidth:1.5,borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:'#0F172A',backgroundColor:'transparent',pointBackgroundColor:'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle()},grid:gridStyle()},yM:{position:'left',ticks:{...tickStyle(),callback:v=>v+'m'},grid:gridStyle(),title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle(),callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
+  charts.cProj=new Chart(document.getElementById('cProj'),{type:'bar',data:{labels:proj.map(p=>p.atv),datasets:[{label:'Meses p/ concluir',data:proj.map(p=>p.meses>0?p.meses:0),backgroundColor:proj.map(p=>hexToRgba(COLORS[p.atv]||'#94A3B8',0.45)),borderColor:proj.map(p=>COLORS[p.atv]||'#94A3B8'),borderWidth:1.5,borderRadius:4,yAxisID:'yM'},{label:'% Executado',data:proj.map(p=>p.pct),type:'line',borderColor:isDark()?'#F1F5F9':'#0F172A',backgroundColor:'transparent',pointBackgroundColor:isDark()?'#F1F5F9':'#0F172A',pointRadius:5,borderWidth:2,tension:0.3,yAxisID:'yP'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?`Meses restantes: ${ctx.parsed.y.toFixed(1)}`:`Executado: ${ctx.parsed.y}%`}}},scales:{x:{ticks:{...tickStyle()},grid:gridStyle()},yM:{position:'left',ticks:{...tickStyle(),callback:v=>v+'m'},grid:gridStyle(),title:{display:true,text:'Meses p/ conclusão',color:'#94A3B8',font:{size:11}}},yP:{position:'right',min:0,max:100,ticks:{...tickStyle(),callback:v=>v+'%'},grid:{drawOnChartArea:false},title:{display:true,text:'% Executado',color:'#94A3B8',font:{size:11}}}}}});
 }
 
 function renderProjCards(){
