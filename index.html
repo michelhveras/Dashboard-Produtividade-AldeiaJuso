@@ -185,7 +185,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
     <div class="chart-card">
       <div class="chart-header"><div>
         <div class="chart-title">Carga de mão de obra por atividade</div>
-        <div class="chart-sub">Média de trabalhadores/mês ao longo do tempo</div>
+        <div class="chart-sub">Média de trabalhadores/dia ao longo do tempo</div>
       </div></div>
       <div class="legend">
         <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span>
@@ -215,7 +215,7 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
     <div class="chart-card">
       <div class="chart-header"><div>
         <div class="chart-title" id="c4-title">Equipa por atividade</div>
-        <div class="chart-sub" id="c4-sub">Média de trabalhadores/mês</div>
+        <div class="chart-sub" id="c4-sub">Média de trabalhadores/dia</div>
       </div></div>
       <div class="legend" id="c4-legend">
         <span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span>
@@ -375,8 +375,8 @@ function renderMetrics(){
   const totalMeses=[...new Set(d.map(x=>x.mes))].length;
   const und=getUnd(activeFilter);
   let cards;
-  if(isAll){cards=[{cls:'blue',label:'Pico de carga de mão de obra',value:picoCarga.total.toFixed(1),unit:'trabalhadores acumulados num mês'},{cls:'green',label:'Mês do pico de mão de obra',value:picoCarga.mes,unit:'maior concentração de equipa'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/mês (média geral)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
-  else{cards=[{cls:'blue',label:'Total executado',value:activeFilter==='Ferro'?(totalQtd/1000).toFixed(1)+'t':fmt(totalQtd)+' '+und,unit:activeFilter==='Ferro'?'kg acumulados':'m² acumulados'},{cls:'green',label:'Pico de rendimento',value:fmt(maxRend),unit:und+' por dia (máximo)'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/mês (média)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
+  if(isAll){cards=[{cls:'blue',label:'Pico de carga de mão de obra',value:picoCarga.total.toFixed(1),unit:'trabalhadores acumulados num mês'},{cls:'green',label:'Mês do pico de mão de obra',value:picoCarga.mes,unit:'maior concentração de equipa'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/dia (média geral)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
+  else{cards=[{cls:'blue',label:'Total executado',value:activeFilter==='Ferro'?(totalQtd/1000).toFixed(1)+'t':fmt(totalQtd)+' '+und,unit:activeFilter==='Ferro'?'kg acumulados':'m² acumulados'},{cls:'green',label:'Pico de rendimento',value:fmt(maxRend),unit:und+' por dia (máximo)'},{cls:'amber',label:'Média de equipa',value:avgTrab.toFixed(1),unit:'trabalhadores/dia (média)'},{cls:'pink',label:'Meses registados',value:totalMeses,unit:'meses com dados'}];}
   document.getElementById('metrics-row').innerHTML=cards.map(m=>`<div class="metric-card ${m.cls}"><div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-unit">${m.unit}</div></div>`).join('');
 }
 
@@ -410,7 +410,7 @@ function updateChartTitles(){
     document.getElementById('c3-title').textContent='Rendimento diário — Carpintaria';
     document.getElementById('c3-sub').textContent='m² por dia trabalhado';
     document.getElementById('c4-title').textContent='Equipa por atividade';
-    document.getElementById('c4-sub').textContent='Média de trabalhadores/mês';
+    document.getElementById('c4-sub').textContent='Média de trabalhadores/dia';
     document.getElementById('c4-legend').innerHTML='<span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span><span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria</span><span class="leg"><span class="leg-sq" style="background:#D97706"></span>Alvenarias</span>';
   } else {
     document.getElementById('c1-title').textContent=`Quantidade executada por mês — ${f}`;
@@ -421,7 +421,7 @@ function updateChartTitles(){
     document.getElementById('c3-title').textContent=`Rendimento/trabalhador/mês — ${f}`;
     document.getElementById('c3-sub').textContent=`${und} por trabalhador por mês`;
     document.getElementById('c4-title').textContent=`Equipa — ${f}`;
-    document.getElementById('c4-sub').textContent='Média de trabalhadores/mês';
+    document.getElementById('c4-sub').textContent='Média de trabalhadores/dia';
     document.getElementById('c4-legend').innerHTML=`<span class="leg"><span class="leg-sq" style="background:${col}"></span>${f}</span>`;
   }
 }
