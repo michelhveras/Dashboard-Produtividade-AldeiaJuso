@@ -160,16 +160,9 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
 </header>
 
 <main>
-  <div class="filter-bar">
+  <div class="filter-bar" id="filter-bar">
     <span class="filter-label">Atividade:</span>
     <button class="filter-btn active" onclick="setFilter('Todas')">Todas</button>
-    <button class="filter-btn" onclick="setFilter('Ferro')">Ferro</button>
-    <button class="filter-btn" onclick="setFilter('Carpintaria')">Carpintaria</button>
-    <button class="filter-btn" onclick="setFilter('Alvenarias')">Alvenarias</button>
-    <button class="filter-btn" onclick="setFilter('Cobertura')">Cobertura</button>
-    <button class="filter-btn" onclick="setFilter('ETICS')">ETICS</button>
-    <button class="filter-btn" onclick="setFilter('Betonilhas')">Betonilhas</button>
-    <button class="filter-btn" onclick="setFilter('PAV terréo')">PAV terréo</button>
   </div>
 
   <div class="metrics-grid" id="metrics-row"></div>
@@ -283,13 +276,14 @@ let BASE_DATA = [];
 let TOTAIS = {};
 let REF_MES = null; // definido na aba Config do Sheets; null = auto-detecção
 
-const COLORS={'Ferro':'#2563EB','Carpintaria':'#059669','Alvenarias':'#D97706','Cobertura':'#DB2777','ETICS':'#7C3AED','Betonilhas':'#64748B','PAV terréo':'#0891B2'};
-const PILL={'Ferro':'pill-blue','Carpintaria':'pill-green','Alvenarias':'pill-amber','Cobertura':'pill-pink','ETICS':'pill-blue','Betonilhas':'pill-amber','PAV terréo':'pill-green'};
-const UND={'Ferro':'kg','Carpintaria':'m²','Alvenarias':'m²','Betonilhas':'m²','Cobertura':'m²','ETICS':'m²','PAV terréo':'m²'};
+const COLORS={'Ferro':'#2563EB','Carpintaria':'#059669','Alvenarias':'#D97706','Cobertura':'#DB2777','ETICS':'#7C3AED','Betonilhas':'#64748B','PAV terréo':'#0891B2','Canalização':'#0E7490','IE':'#DC2626','AVAC':'#9333EA','Gesso Cartonado':'#65A30D'};
+const PILL={'Ferro':'pill-blue','Carpintaria':'pill-green','Alvenarias':'pill-amber','Cobertura':'pill-pink','ETICS':'pill-blue','Betonilhas':'pill-amber','PAV terréo':'pill-green','Canalização':'pill-blue','IE':'pill-pink','AVAC':'pill-blue','Gesso Cartonado':'pill-green'};
+const UND={'Ferro':'kg','Carpintaria':'m²','Alvenarias':'m²','Betonilhas':'m²','Cobertura':'m²','ETICS':'m²','PAV terréo':'m²','Canalização':'m³','IE':'m³','AVAC':'m³','Gesso Cartonado':'m²'};
 
 function allData(){return BASE_DATA;}
 
 let activeFilter='Todas';
+let _top3Atvs=[];
 const fmt=n=>(n==null||isNaN(n))?'—':Number(n).toLocaleString('pt-PT',{maximumFractionDigits:1});
 const fmtEur=n=>(n==null||isNaN(n))?'—':'€\u202f'+Number(n).toLocaleString('pt-PT',{maximumFractionDigits:0});
 function isDark(){return document.documentElement.getAttribute('data-theme')==='dark';}
@@ -298,7 +292,14 @@ const gridStyle=()=>({color:isDark()?'rgba(75,85,99,0.3)':'rgba(148,163,184,0.12
 function getData(){const d=allData();return activeFilter==='Todas'?d:d.filter(x=>x.atv===activeFilter);}
 function getMeses(){return[...new Set(allData().map(d=>d.mes))];}
 function getByAtv(atv,field){return getMeses().map(m=>{const r=allData().find(d=>d.mes===m&&d.atv===atv);return r?r[field]:null;});}
-function getUnd(atv){return UND[atv]||'m²';}
+function getUnd(atv){const r=BASE_DATA.find(x=>x.atv===atv);return r?r.und:UND[atv]||'m²';}
+function buildFilterBar(){
+  const atvs=[...new Set(BASE_DATA.map(x=>x.atv))];
+  document.getElementById('filter-bar').innerHTML=
+    '<span class="filter-label">Atividade:</span>'+
+    '<button class="filter-btn'+(activeFilter==='Todas'?' active':'')+'" onclick="setFilter(\'Todas\')">Todas</button>'+
+    atvs.map(a=>`<button class="filter-btn${activeFilter===a?' active':''}" onclick="setFilter('${a}')">${a}</button>`).join('');
+}
 
 Chart.register({id:'emptyState',afterDraw(chart){const has=chart.data.datasets.some(ds=>ds.data&&ds.data.some(v=>v!==null&&v!==undefined&&!isNaN(Number(v))));if(!has){const{ctx,chartArea:{left,top,right,bottom}}=chart;const cx=(left+right)/2,cy=(top+bottom)/2;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=isDark()?'#4B5563':'#CBD5E1';ctx.font="500 13px 'DM Sans',sans-serif";ctx.fillText('Sem dados para o filtro selecionado',cx,cy);ctx.restore();}}});
 let charts={};
@@ -310,8 +311,9 @@ function buildCharts(){
   charts.c1=new Chart(document.getElementById('c1'),{type:'bar',data:{labels:meses,datasets:[{label:'Ferro (kg)',data:getByAtv('Ferro','qtd'),backgroundColor:'#2563EB',yAxisID:'yL',borderRadius:3},{label:'Carpintaria (m²)',data:getByAtv('Carpintaria','qtd'),backgroundColor:'#059669',yAxisID:'yR',borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const lbl=activeFilter==='Todas'?ctx.dataset.label:`${activeFilter} (${getUnd(activeFilter)})`;return `${lbl}: ${fmt(ctx.parsed.y)}`;}}}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},yL:{position:'left',ticks:{...tickStyle(),callback:v=>(v/1000).toFixed(0)+'k'},grid:gridStyle(),title:{display:true,text:'Ferro (kg)',color:'#2563EB',font:{size:11}}},yR:{position:'right',ticks:{...tickStyle()},grid:{drawOnChartArea:false},title:{display:true,text:'Carpintaria (m²)',color:'#059669',font:{size:11}}}}}});
   charts.c2=new Chart(document.getElementById('c2'),{type:'line',data:{labels:meses,datasets:[{label:'kg/dia',data:getByAtv('Ferro','rendDia'),borderColor:'#2563EB',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#2563EB',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle(),callback:v=>fmt(v)},grid:gridStyle()}}}});
   charts.c3=new Chart(document.getElementById('c3'),{type:'line',data:{labels:meses,datasets:[{label:'m²/dia',data:getByAtv('Carpintaria','rendDia'),borderColor:'#059669',backgroundColor:'rgba(5,150,105,0.08)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#059669',spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
-  charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:[{label:'Ferro',data:getByAtv('Ferro','trab'),borderColor:'#2563EB',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Carpintaria',data:getByAtv('Carpintaria','trab'),borderColor:'#059669',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true},{label:'Alvenarias',data:getByAtv('Alvenarias','trab'),borderColor:'#D97706',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
-  const moAtvs=['Ferro','Carpintaria','Alvenarias','Cobertura','ETICS','Betonilhas','PAV terréo'];
+  const moAtvs=[...new Set(BASE_DATA.map(x=>x.atv))];
+  _top3Atvs=moAtvs.slice(0,3);
+  charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:_top3Atvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a]||'#94A3B8',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
   charts.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:meses,datasets:moAtvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a],backgroundColor:'transparent',tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[a],borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
   buildProjChart();
 }
@@ -349,11 +351,11 @@ function calcProjections(){
     const avgTrab=ult3.reduce((s,x)=>s+x.trab,0)/ult3.length;
     const prodMes=avgRend*avgTrab;
     const meses=avgFatMes>0&&restanteEur>0?Math.round(restanteEur/avgFatMes*10)/10:0;
-    const mesesProd=prodMes>0&&restante>0?Math.round(restante/prodMes*10)/10:0;
+    const mesesProd=info.total===0?null:prodMes>0&&restante>0?Math.round(restante/prodMes*10)/10:0;
     function addMeses(mi,yr,n){let m=mi,y=yr;const c=Math.ceil(n);for(let i=0;i<c;i++){m++;if(m>11){m=0;y++;}}return{m,y};}
-    const cf=addMeses(refMi,refYr,meses),cp=addMeses(refMi,refYr,mesesProd);
+    const cf=addMeses(refMi,refYr,meses),cp=mesesProd?addMeses(refMi,refYr,mesesProd):{m:refMi,y:refYr};
     const conclusao=meses===0?'Concluído':`${mNames[cf.m]}/${cf.y}`;
-    const conclusaoProd=mesesProd===0?'Concluído':`${mNames[cp.m]}/${cp.y}`;
+    const conclusaoProd=mesesProd===null?'N/D':mesesProd===0?'Concluído':`${mNames[cp.m]}/${cp.y}`;
     return{atv,und:info.und,total:info.total,executado:Math.round(executado*10)/10,restante:Math.round(restante*10)/10,pct,executadoEur:Math.round(executadoEur),totalEur:Math.round(totalEur),restanteEur:Math.round(restanteEur),pctEur,avgFatMes:Math.round(avgFatMes),avgRend:Math.round(avgRend*10)/10,avgTrab:Math.round(avgTrab*10)/10,prodMes:Math.round(prodMes*10)/10,meses,mesesProd,conclusao,conclusaoProd,refMes};
   }).filter(Boolean);
   return _projCache;
@@ -383,18 +385,22 @@ function renderProjCards(){
     const m=isFin?p.meses:p.mesesProd;
     const conclusao=isFin?p.conclusao:p.conclusaoProd;
     const pctVal=isFin?p.pctEur:p.pct;
-    const cls=m===0?'proj-c-done':m<=3?'proj-c-soon':m<=8?'proj-c-mid':'proj-c-late';
-    const label=m===0?'Concluído':`${conclusao} (${m}m)`;
+    const noQty=!isFin&&p.mesesProd===null;
+    const cls=noQty?'proj-c-mid':m===0?'proj-c-done':m<=3?'proj-c-soon':m<=8?'proj-c-mid':'proj-c-late';
+    const label=noQty?'Sem qty total':m===0?'Concluído':`${conclusao} (${m}m)`;
     const icon=m===0?'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z"/></svg>':m<=8?'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.5 8a6.5 6.5 0 1113 0A6.5 6.5 0 011.5 8zm7-.75v3.56l2.03.81a.75.75 0 11-.56 1.39l-2.5-1A.75.75 0 017 11.25v-4a.75.75 0 011.5 0z"/></svg>':'<svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8.22 1.754a.25.25 0 00-.44 0L1.698 13.132a.25.25 0 00.22.368h12.164a.25.25 0 00.22-.368zm-1.763-.707c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0114.082 15H1.918a1.75 1.75 0 01-1.543-2.575zm1.29 3.03a.75.75 0 011.5 0v3a.75.75 0 01-1.5 0zm.75 5.75a1 1 0 110 2 1 1 0 010-2z"/></svg>';
     const fillColor=pctVal>=90?'#059669':pctVal>=50?'#2563EB':pctVal>=20?'#D97706':'#DC2626';
     const stats=isFin
       ?`<div class="proj-stat"><div class="proj-stat-val">${fmtEur(p.executadoEur)}</div><div class="proj-stat-label">Faturado</div></div><div class="proj-stat"><div class="proj-stat-val">${fmtEur(p.avgFatMes)}</div><div class="proj-stat-label">Méd. fat./mês</div></div><div class="proj-stat"><div class="proj-stat-val">${fmtEur(p.restanteEur)}</div><div class="proj-stat-label">Restante</div></div>`
+      :noQty?`<div class="proj-stat" style="grid-column:1/-1"><div class="proj-stat-val" style="color:var(--gray-400)">—</div><div class="proj-stat-label">Sem total de quantidade definido</div></div>`
       :`<div class="proj-stat"><div class="proj-stat-val">${p.avgTrab}</div><div class="proj-stat-label">Média trab.</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.avgRend)}</div><div class="proj-stat-label">Rend./trab/mês</div></div><div class="proj-stat"><div class="proj-stat-val">${fmt(p.prodMes)}</div><div class="proj-stat-label">Prod./mês</div></div>`;
     const progLabel=isFin
       ?`<span>Faturado: ${fmtEur(p.executadoEur)}</span><span style="font-weight:600;color:var(--gray-800)">${p.pctEur}%</span>`
+      :noQty?`<span style="color:var(--gray-400)">Projeção física indisponível</span><span>—</span>`
       :`<span>Executado: ${fmt(p.executado)} ${p.und}</span><span style="font-weight:600;color:var(--gray-800)">${p.pct}%</span>`;
     const progSub=isFin
       ?`<span>Restante: ${fmtEur(p.restanteEur)}</span><span>Total: ${fmtEur(p.totalEur)}</span>`
+      :noQty?`<span></span><span></span>`
       :`<span>Restante: ${fmt(p.restante)} ${p.und}</span><span>Total: ${fmt(p.total)} ${p.und}</span>`;
     return`<div class="proj-card"><div class="proj-card-header"><div style="display:flex;align-items:center;gap:7px"><span style="width:9px;height:9px;border-radius:50%;background:${col};flex-shrink:0"></span><span class="proj-atv">${p.atv}</span></div><span class="proj-conclusao ${cls}" style="display:flex;align-items:center;gap:4px">${icon}${label}</span></div><div class="proj-body"><div class="proj-prog-label">${progLabel}</div><div class="proj-prog-bg"><div class="proj-prog-fill" style="width:${Math.min(100,pctVal)}%;background:${fillColor}"></div></div><div class="proj-prog-label">${progSub}</div><div class="proj-stats">${stats}</div></div></div>`;
   }).join('');
@@ -447,7 +453,7 @@ function updateChartTitles(){
     document.getElementById('c3-sub').textContent='m² por dia trabalhado';
     document.getElementById('c4-title').textContent='Equipa por atividade';
     document.getElementById('c4-sub').textContent='Média de trabalhadores/dia';
-    document.getElementById('c4-legend').innerHTML='<span class="leg"><span class="leg-sq" style="background:#2563EB"></span>Ferro</span><span class="leg"><span class="leg-sq" style="background:#059669"></span>Carpintaria</span><span class="leg"><span class="leg-sq" style="background:#D97706"></span>Alvenarias</span>';
+    document.getElementById('c4-legend').innerHTML=_top3Atvs.map(a=>`<span class="leg"><span class="leg-sq" style="background:${COLORS[a]||'#94A3B8'}"></span>${a}</span>`).join('');
   } else {
     document.getElementById('c1-title').textContent=`Quantidade executada por mês — ${f}`;
     document.getElementById('c1-sub').textContent=`Total de ${und} executados por mês`;
@@ -473,8 +479,7 @@ function updateCharts(){
     charts.c2.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} kg/dia`;
     charts.c3.data.datasets[0].data=getByAtv('Carpintaria','rendDia');charts.c3.data.datasets[0].borderColor='#059669';charts.c3.data.datasets[0].pointBackgroundColor='#059669';
     charts.c3.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} m²/dia`;
-    charts.c4.data.datasets[0].data=getByAtv('Ferro','trab');charts.c4.data.datasets[0].borderColor='#2563EB';charts.c4.data.datasets[0].label='Ferro';
-    charts.c4.data.datasets[1].data=getByAtv('Carpintaria','trab');charts.c4.data.datasets[1].label='Carpintaria';charts.c4.data.datasets[2].data=getByAtv('Alvenarias','trab');charts.c4.data.datasets[2].label='Alvenarias';charts.c4.options.plugins.tooltip={callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} trab.`}};
+    _top3Atvs.forEach((a,i)=>{if(charts.c4.data.datasets[i]){charts.c4.data.datasets[i].data=getByAtv(a,'trab');charts.c4.data.datasets[i].borderColor=COLORS[a]||'#94A3B8';charts.c4.data.datasets[i].label=a;}});charts.c4.options.plugins.tooltip={callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y} trab.`}};
   } else {
     const filt=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.qtd:null;});
     const filtR=meses.map(m=>{const r=d.find(x=>x.mes===m);return r?r.rendDia:null;});
@@ -495,6 +500,7 @@ function updateCharts(){
 
 function refreshAll(){
   invalidateProjCache();
+  buildFilterBar();
   updatePeriod();renderMetrics();renderTable();
   buildCharts();renderProjCards();updateChartTitles();
 }
