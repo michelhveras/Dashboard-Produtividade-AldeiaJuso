@@ -83,6 +83,13 @@ tr:hover td{background:var(--gray-50)}
 .section-label{font-size:11px;font-weight:600;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;margin-top:1.5rem;display:flex;align-items:center;gap:8px}
 .section-label::after{content:'';flex:1;height:1px;background:var(--gray-200)}
 footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);border-top:1px solid var(--gray-200);margin-top:1rem}
+.collapse-btn{display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--gray-400);background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;transition:all 0.15s}
+.collapse-btn:hover{background:var(--gray-100);color:var(--gray-600)}
+.collapse-btn svg{transition:transform 0.2s}
+.collapse-btn.collapsed svg{transform:rotate(-90deg)}
+.table-collapsible{overflow:hidden;transition:max-height 0.25s ease;max-height:9999px}
+.table-collapsible.collapsed{max-height:0}
+.fat-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .proj-toggle{display:flex;gap:4px;background:var(--gray-100);border-radius:8px;padding:3px}
 .proj-toggle-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--gray-600);cursor:pointer;transition:all 0.15s;white-space:nowrap}
 .proj-toggle-btn.active{background:white;color:var(--gray-900);box-shadow:0 1px 3px rgba(0,0,0,0.1)}
@@ -240,17 +247,35 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
   </div>
   <div class="proj-grid" id="proj-grid"></div>
 
+  <div class="section-label" style="margin-top:2rem">Faturação mensal</div>
+  <div class="chart-card" style="margin-bottom:16px">
+    <div class="chart-header"><div>
+      <div class="chart-title" id="fat-title">Faturação mensal por atividade</div>
+      <div class="chart-sub" id="fat-sub">€ faturado por mês · barras empilhadas</div>
+    </div></div>
+    <div class="fat-legend" id="fat-legend"></div>
+    <div style="position:relative;width:100%;height:260px"><canvas id="cFat"></canvas></div>
+  </div>
+
   <div class="section-label" style="margin-top:2rem">Registo detalhado</div>
   <div class="table-card">
-    <div class="table-header">
-      <div class="chart-title">Registo detalhado por mês e atividade</div>
-      <div class="chart-sub" style="margin-top:2px;font-size:12px;color:var(--gray-400)">Todos os dados do período</div>
+    <div class="table-header" style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div class="chart-title">Registo detalhado por mês e atividade</div>
+        <div class="chart-sub" style="margin-top:2px;font-size:12px;color:var(--gray-400)">Todos os dados do período</div>
+      </div>
+      <button class="collapse-btn" id="table-toggle-btn" onclick="toggleTable()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 01.708 0L8 10.293l5.646-5.647a.5.5 0 01.708.708l-6 6a.5.5 0 01-.708 0l-6-6a.5.5 0 010-.708z"/></svg>
+        <span id="table-toggle-label">Minimizar</span>
+      </button>
     </div>
-    <div style="overflow-x:auto">
-      <table class="table-responsive"><thead><tr>
-        <th>Mês</th><th>Atividade</th><th>Qtd. Executada</th><th>Und.</th>
-        <th>Média trab./mês</th><th>Dias úteis</th><th>Rend./mês</th><th>Rend./dia</th>
-      </tr></thead><tbody id="table-body"></tbody></table>
+    <div class="table-collapsible" id="table-collapsible">
+      <div style="overflow-x:auto">
+        <table class="table-responsive"><thead><tr>
+          <th>Mês</th><th>Atividade</th><th>Qtd. Executada</th><th>Und.</th>
+          <th>Média trab./mês</th><th>Dias úteis</th><th>Rend./mês</th><th>Rend./dia</th>
+        </tr></thead><tbody id="table-body"></tbody></table>
+      </div>
     </div>
   </div>
 
@@ -315,6 +340,7 @@ function buildCharts(){
   _top3Atvs=moAtvs.slice(0,3);
   charts.c4=new Chart(document.getElementById('c4'),{type:'line',data:{labels:meses,datasets:_top3Atvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a]||'#94A3B8',backgroundColor:'transparent',tension:0.3,pointRadius:2,borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
   charts.c5=new Chart(document.getElementById('c5'),{type:'line',data:{labels:meses,datasets:moAtvs.map(a=>({label:a,data:getByAtv(a,'trab'),borderColor:COLORS[a],backgroundColor:'transparent',tension:0.3,pointRadius:3,pointBackgroundColor:COLORS[a],borderWidth:2,spanGaps:true}))},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},y:{ticks:{...tickStyle()},grid:gridStyle()}}}});
+  buildFatChart();
   buildProjChart();
 }
 
@@ -443,6 +469,8 @@ function setFilter(f){
 function updateChartTitles(){
   const f=activeFilter,isAll=f==='Todas';
   const und=isAll?'':getUnd(f),col=isAll?'#2563EB':(COLORS[f]||'#2563EB');
+  document.getElementById('fat-title').textContent=isAll?'Faturação mensal por atividade':`Faturação mensal — ${f}`;
+  document.getElementById('fat-sub').textContent=isAll?'€ faturado por mês · barras empilhadas':`€ faturado por mês · ${f}`;
   if(isAll){
     document.getElementById('c1-title').textContent='Quantidade executada por mês';
     document.getElementById('c1-sub').textContent='Ferro (kg) e Carpintaria (m²) — eixos independentes';
@@ -493,16 +521,66 @@ function updateCharts(){
     charts.c3.options.plugins.tooltip.callbacks.label=ctx=>`${fmt(ctx.parsed.y)} ${und}/trab/mês`;
     charts.c4.data.datasets[0].data=filtT;charts.c4.data.datasets[0].borderColor=col;charts.c4.data.datasets[0].label=activeFilter;charts.c4.options.plugins.tooltip={callbacks:{label:ctx=>`${activeFilter}: ${ctx.parsed.y} trab.`}};charts.c4.data.datasets[1].data=[];charts.c4.data.datasets[2].data=[];
   }
-  Object.values(charts).forEach(c=>c.update());
-  buildProjChart();renderProjCards();
+  Object.values(charts).filter(c=>c!==charts.cFat).forEach(c=>c.update());
+  buildFatChart();buildProjChart();renderProjCards();
 }
 
 
+function toggleTable(){
+  const el=document.getElementById('table-collapsible');
+  const btn=document.getElementById('table-toggle-btn');
+  const lbl=document.getElementById('table-toggle-label');
+  const collapsed=el.classList.toggle('collapsed');
+  btn.classList.toggle('collapsed',collapsed);
+  lbl.textContent=collapsed?'Expandir':'Minimizar';
+  localStorage.setItem('tableCollapsed',collapsed?'1':'0');
+}
+function restoreTableState(){
+  if(localStorage.getItem('tableCollapsed')==='1'){
+    const el=document.getElementById('table-collapsible');
+    const btn=document.getElementById('table-toggle-btn');
+    const lbl=document.getElementById('table-toggle-label');
+    el.classList.add('collapsed');btn.classList.add('collapsed');lbl.textContent='Expandir';
+  }
+}
+function buildFatChart(){
+  if(charts.cFat){try{charts.cFat.destroy();}catch(e){}}
+  const meses=getMeses();
+  const isAll=activeFilter==='Todas';
+  const atvs=isAll?[...new Set(BASE_DATA.map(x=>x.atv))]:[activeFilter];
+  const datasets=atvs.map(a=>({
+    label:a,
+    data:meses.map(m=>{const r=BASE_DATA.find(d=>d.mes===m&&d.atv===a);return r?r.fatMes:null;}),
+    backgroundColor:hexToRgba(COLORS[a]||'#94A3B8',isAll?0.85:0.7),
+    borderColor:COLORS[a]||'#94A3B8',
+    borderWidth:isAll?0:1.5,
+    borderRadius:isAll?0:4,
+    spanGaps:true
+  }));
+  document.getElementById('fat-legend').innerHTML=isAll
+    ?atvs.map(a=>`<span class="leg"><span class="leg-sq" style="background:${COLORS[a]||'#94A3B8'}"></span>${a}</span>`).join('')
+    :`<span class="leg"><span class="leg-sq" style="background:${COLORS[activeFilter]||'#94A3B8'}"></span>${activeFilter}</span>`;
+  charts.cFat=new Chart(document.getElementById('cFat'),{
+    type:'bar',
+    data:{labels:meses,datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{
+        label:ctx=>`${ctx.dataset.label}: ${fmtEur(ctx.parsed.y)}`,
+        footer:items=>{const tot=items.reduce((s,i)=>s+(i.parsed.y||0),0);return items.length>1?`Total: ${fmtEur(tot)}`:''}
+      }}},
+      scales:{
+        x:{stacked:isAll,ticks:{...tickStyle(),maxRotation:45,autoSkip:false},grid:gridStyle()},
+        y:{stacked:isAll,ticks:{...tickStyle(),callback:v=>fmtEur(v)},grid:gridStyle()}
+      }
+    }
+  });
+}
 function refreshAll(){
   invalidateProjCache();
   buildFilterBar();
   updatePeriod();renderMetrics();renderTable();
   buildCharts();renderProjCards();updateChartTitles();
+  restoreTableState();
 }
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
