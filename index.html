@@ -90,6 +90,10 @@ footer{text-align:center;padding:2rem;font-size:12px;color:var(--gray-400);borde
 .table-collapsible{overflow:hidden;transition:max-height 0.25s ease;max-height:9999px}
 .table-collapsible.collapsed{max-height:0}
 .fat-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.fat-leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray-600);cursor:pointer;padding:3px 7px;border-radius:6px;border:1.5px solid transparent;transition:all 0.15s;user-select:none}
+.fat-leg-item:hover{background:var(--gray-100)}
+.fat-leg-item.fat-leg-active{border-color:var(--gray-400);background:var(--gray-100);font-weight:600;color:var(--gray-900)}
+.fat-leg-item.fat-leg-dim{opacity:0.35}
 .proj-toggle{display:flex;gap:4px;background:var(--gray-100);border-radius:8px;padding:3px}
 .proj-toggle-btn{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;padding:5px 12px;border-radius:6px;border:none;background:transparent;color:var(--gray-600);cursor:pointer;transition:all 0.15s;white-space:nowrap}
 .proj-toggle-btn.active{background:white;color:var(--gray-900);box-shadow:0 1px 3px rgba(0,0,0,0.1)}
@@ -543,8 +547,27 @@ function restoreTableState(){
     el.classList.add('collapsed');btn.classList.add('collapsed');lbl.textContent='Expandir';
   }
 }
+let fatHighlight=null;
+function toggleFatHighlight(atv){
+  fatHighlight=fatHighlight===atv?null:atv;
+  if(!charts.cFat)return;
+  const atvs=charts.cFat.data.datasets.map(d=>d.label);
+  charts.cFat.data.datasets.forEach((ds,i)=>{
+    const a=atvs[i];
+    const col=COLORS[a]||'#94A3B8';
+    ds.backgroundColor=fatHighlight===null?hexToRgba(col,0.85):a===fatHighlight?hexToRgba(col,1):hexToRgba(col,0.1);
+    ds.borderColor=fatHighlight===null||a===fatHighlight?col:hexToRgba(col,0.15);
+  });
+  charts.cFat.update('none');
+  document.querySelectorAll('.fat-leg-item').forEach(el=>{
+    const a=el.dataset.atv;
+    el.classList.toggle('fat-leg-active',fatHighlight===a);
+    el.classList.toggle('fat-leg-dim',fatHighlight!==null&&fatHighlight!==a);
+  });
+}
 function buildFatChart(){
   if(charts.cFat){try{charts.cFat.destroy();}catch(e){}}
+  fatHighlight=null;
   const meses=getMeses();
   const isAll=activeFilter==='Todas';
   const atvs=isAll?[...new Set(BASE_DATA.map(x=>x.atv))]:[activeFilter];
@@ -558,8 +581,8 @@ function buildFatChart(){
     spanGaps:true
   }));
   document.getElementById('fat-legend').innerHTML=isAll
-    ?atvs.map(a=>`<span class="leg"><span class="leg-sq" style="background:${COLORS[a]||'#94A3B8'}"></span>${a}</span>`).join('')
-    :`<span class="leg"><span class="leg-sq" style="background:${COLORS[activeFilter]||'#94A3B8'}"></span>${activeFilter}</span>`;
+    ?atvs.map(a=>`<span class="fat-leg-item" data-atv="${a}" onclick="toggleFatHighlight('${a}')"><span class="leg-sq" style="background:${COLORS[a]||'#94A3B8'}"></span>${a}</span>`).join('')
+    :`<span class="fat-leg-item fat-leg-active" data-atv="${activeFilter}"><span class="leg-sq" style="background:${COLORS[activeFilter]||'#94A3B8'}"></span>${activeFilter}</span>`;
   charts.cFat=new Chart(document.getElementById('cFat'),{
     type:'bar',
     data:{labels:meses,datasets},
