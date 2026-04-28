@@ -558,7 +558,7 @@ function toggleFatHighlight(atv){
     ds.backgroundColor=fatHighlight===null?hexToRgba(col,0.85):a===fatHighlight?hexToRgba(col,1):hexToRgba(col,0.1);
     ds.borderColor=fatHighlight===null||a===fatHighlight?col:hexToRgba(col,0.15);
   });
-  charts.cFat.update('none');
+  charts.cFat.update();
   document.querySelectorAll('.fat-leg-item').forEach(el=>{
     const a=el.dataset.atv;
     el.classList.toggle('fat-leg-active',fatHighlight===a);
